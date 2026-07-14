@@ -407,6 +407,7 @@ async function renderGenerate(el){
           <div class="form-group"><label>数量（最多20题）</label><input id="gen-count" type="number" value="5" min="1" max="20"></div>
           <div class="form-group"><label>难度</label><select id="gen-difficulty">${[1,2,3,4,5].map(d=>`<option value="${d}" ${d==3?'selected':''}>${'⭐'.repeat(d)}</option>`).join('')}</select></div>
           <div class="form-group"><label>知识点（可选）</label><input id="gen-kp" placeholder="如：分数的加减法"></div>
+          <div class="form-group full-width"><button class="btn btn-primary" onclick="generateQuestions()" id="gen-btn" style="padding:12px;width:100%;justify-content:center;font-size:15px">🤖 AI 生成题目</button></div>
         </div>
         <div id="gen-result" style="margin-top:16px"></div>
       </div>
