@@ -1,0 +1,16 @@
+{
+  "name": "exam-system",
+  "version": "1.0.0",
+  "description": "AI 智能考试系统 - 小学/初中/高中",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "keywords": ["exam", "education", "ai"],
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "sql.js": "^1.10.0"
+  }
+}

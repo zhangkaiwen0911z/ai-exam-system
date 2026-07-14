@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - AI 考试系统</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15);padding:40px 32px;max-width:400px;width:100%}
+.logo{text-align:center;margin-bottom:24px}
+.logo .icon{font-size:56px}
+.logo h1{font-size:22px;margin-top:8px;color:#1e293b}
+.logo p{font-size:14px;color:#94a3b8;margin-top:4px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:#64748b;margin-bottom:4px}
+.form-group input{width:100%;padding:12px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:15px;transition:all .2s}
+.form-group input:focus{outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.15)}
+.btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;transition:all .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.4)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.links{text-align:center;margin-top:16px;font-size:13px;color:#94a3b8}
+.links a{color:#667eea;text-decoration:none;cursor:pointer}
+.links a:hover{text-decoration:underline}
+.error{background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.success{background:#f0fdf4;color:#16a34a;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.tab{display:flex;margin-bottom:20px;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0}
+.tab button{flex:1;padding:10px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:#fff;color:#64748b;transition:all .2s}
+.tab button.active{background:#667eea;color:#fff}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="icon">🎓</div>
+    <h1>AI 智能考试系统</h1>
+    <p>请登录后使用</p>
+  </div>
+
+  <div id="error-msg" class="error"></div>
+  <div id="success-msg" class="success"></div>
+
+  <div class="tab">
+    <button class="active" onclick="switchTab('login')" id="tab-login">登录</button>
+    <button onclick="switchTab('register')" id="tab-reg">注册</button>
+  </div>
+
+  <!-- 登录 -->
+  <div id="form-login">
+    <div class="form-group"><label>用户名</label><input id="login-user" placeholder="请输入用户名" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="form-group"><label>密码</label><input id="login-pass" type="password" placeholder="请输入密码" onkeydown="if(event.key==='Enter')login()"></div>
+    <button class="btn" id="login-btn" onclick="login()">登 录</button>
+  </div>
+
+  <!-- 注册 -->
+  <div id="form-register" style="display:none">
+    <div class="form-group"><label>用户名</label><input id="reg-user" placeholder="至少2个字符"></div>
+    <div class="form-group"><label>显示名称</label><input id="reg-name" placeholder="如：张老师"></div>
+    <div class="form-group"><label>密码</label><input id="reg-pass" type="password" placeholder="至少6个字符"></div>
+    <div class="form-group"><label>确认密码</label><input id="reg-pass2" type="password"></div>
+    <button class="btn" id="reg-btn" onclick="register()">注 册</button>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let _token = localStorage.getItem('exam_token') || '';
+
+// 如果已有token，直接跳转
+if (_token) {
+  fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + _token } })
+    .then(r => r.json())
+    .then(data => {
+      if (data.logged_in) window.location.href = '/';
+    })
+    .catch(() => {});
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+function showSuccess(msg) {
+  const el = document.getElementById('success-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('error-msg').style.display = 'none';
+}
+
+function switchTab(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').className = tab === 'login' ? 'active' : '';
+  document.getElementById('tab-reg').className = tab === 'register' ? 'active' : '';
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('success-msg').style.display = 'none';
+}
+
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (_token) opts.headers['Authorization'] = 'Bearer ' + _token;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + url, opts);
+  return r.json();
+}
+
+async function login() {
+  const username = document.getElementById('login-user').value.trim();
+  const password = document.getElementById('login-pass').value;
+  if (!username || !password) return showError('请填写用户名和密码');
+  
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true; btn.textContent = '登录中...';
+  
+  const r = await api('POST', '/auth/login', { username, password });
+  if (r.error) {
+    showError(r.error);
+    btn.disabled = false; btn.textContent = '登 录';
+    return;
+  }
+  
+  _token = r.token;
+  localStorage.setItem('exam_token', r.token);
+  showSuccess('登录成功，正在跳转...');
+  setTimeout(() => { window.location.href = '/'; }, 500);
+}
+
+async function register() {
+  const username = document.getElementById('reg-user').value.trim();
+  const name = document.getElementById('reg-name').value.trim() || username;
+  const password = document.getElementById('reg-pass').value;
+  const password2 = document.getElementById('reg-pass2').value;
+  
+  if (!username || username.length < 2) return showError('用户名至少2个字符');
+  if (!password || password.length < 6) return showError('密码至少6个字符');
+  if (password !== password2) return showError('两次密码不一致');
+  
+  const btn = document.getElementById('reg-btn');
+  btn.disabled = true; btn.textContent = '注册中...';
+  
+  const r = await api('POST', '/auth/register', { username, password, display_name: name, role: 'teacher' });
+  if (r.error) {
+    showError(r.error);
+    btn.disabled = false; btn.textContent = '注 册';
+    return;
+  }
+  
+  _token = r.token;
+  localStorage.setItem('exam_token', r.token);
+  showSuccess('注册成功，正在跳转...');
+  setTimeout(() => { window.location.href = '/'; }, 500);
+}
+</script>
+</body>
+</html>
