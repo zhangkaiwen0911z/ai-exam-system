@@ -66,3 +66,29 @@ exam-baota/
 ├── ecosystem.config.js   # PM2 配置
 └── .env                  # 环境变量
 ```
+
+## 飞牛docker部署yaml
+
+services:
+  ai-exam-system:
+    image: node:20
+    container_name: ai-exam-system
+    working_dir: /app
+    ports:
+      - "3502:3501"
+    volumes:
+      # 持久化目录，存放运行产生的数据、日志
+      - $TRIM_APPDEST/data:/app_data
+    command: >
+      sh -c "
+      rm -rf /app/* &&
+      git clone https://github.com/zhangkaiwen0911z/ai-exam-system.git /app_tmp &&
+      cp -r /app_tmp/* /app/ &&
+      npm install &&
+      npm install pm2 -g &&
+      pm2 start ecosystem.config.js --no-daemon
+      "
+    restart: always
+    # 不需要修改网络请注释删除
+    # cap_add:
+    #   - NET_ADMIN
